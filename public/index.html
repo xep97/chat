@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; }
+    #join-container { display: none; padding: 20px; }
+    #chat-container { display: none; flex: 1; flex-direction: column; }
+
+    /* Chat header */
+    #chat-top { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc; background: #f5f5f5; }
+
+    /* Chat area */
+    #chat-area { display: flex; flex: 1; overflow: hidden; }
+    #messages { list-style: none; padding: 10px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    #user-list { width: 200px; border-left: 1px solid #ccc; padding: 10px; overflow-y: auto; background: #fafafa; }
+
+    #user-list h4 { margin-top: 0; }
+
+    /* Message bubbles */
+    .message { padding: 8px 12px; margin: 5px 0; border-radius: 12px; max-width: 70%; word-wrap: break-word; display: flex; align-items: center; }
+    .my-message { background-color: #d1ffd6; align-self: flex-end; justify-content: flex-end; }
+    .other-message { background-color: #f1f0f0; align-self: flex-start; justify-content: flex-start; }
+    .avatar { width: 20px; height: 20px; border-radius: 50%; display: inline-block; margin-right: 8px; flex-shrink: 0; }
+    .message-text { display: flex; flex-direction: column; }
+    .message-text .content { }
+    .message-text .timestamp { font-size: 0.7em; color: gray; margin-top: 2px; align-self: flex-end; }
+
+    /* System message */
+    .system { text-align: center; font-style: italic; color: gray; margin: 5px 0; }
+
+    #typing-indicator { font-style: italic; color: gray; margin: 5px 10px; }
+
+    /* New message input fixed */
+    #new-message { display: flex; gap: 5px; padding: 10px; border-top: 1px solid #ccc; background: #f5f5f5; }
+    #new-message input { flex: 1; padding: 8px; }
+    #new-message button { padding: 8px 12px; }
+
+    /* Scrollbar for messages */
+    #messages::-webkit-scrollbar { width: 8px; }
+    #messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <!-- Join Room Page -->
+  <div id="join-container">
+    <h2>Join a Chat Room</h2>
+    <input id="name" placeholder="Display name" /><br><br>
+    <input id="room" placeholder="Room name" /><br><br>
+    
+    <label for="font">Font:</label>
+    <select id="font">
+      <option value="Arial">Arial</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Verdana">Verdana</option>
+      <option value="Tahoma">Tahoma</option>
+    </select><br><br>
+
+    <label for="color">Text Color:</label>
+    <input type="color" id="color" value="#000000"/><br><br>
+
+    <button onclick="joinRoom()">Join Room</button>
+  </div>
+
+  <!-- Chat Page -->
+  <div id="chat-container">
+    <div id="chat-top">
+      <h3 id="current-room">Room: </h3>
+      <button onclick="leaveRoom()">Leave Room</button>
+    </div>
+
+    <div id="chat-area">
+      <ul id="messages"></ul>
+      <div id="user-list">
+        <h4>Users in room:</h4>
+        <ul id="users"></ul>
+      </div>
+    </div>
+
+    <p id="typing-indicator"></p>
+
+    <div id="new-message">
+      <input id="message" placeholder="Message" />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const joinContainer = document.getElementById("join-container");
+    const chatContainer = document.getElementById("chat-container");
+    const messageInput = document.getElementById("message");
+    const typingIndicator = document.getElementById("typing-indicator");
+    const messagesList = document.getElementById("messages");
+
+    let typingUsers = new Set();
+    let typingTimeout;
+    let currentRoom = null;
+
+    const savedName = localStorage.getItem("displayName");
+    const savedRoom = localStorage.getItem("lastRoom");
+    const savedFont = localStorage.getItem("font") || "Arial";
+    const savedColor = localStorage.getItem("color") || "#000000";
+
+    if (savedName) document.getElementById("name").value = savedName;
+    document.getElementById("font").value = savedFont;
+    document.getElementById("color").value = savedColor;
+
+    joinContainer.style.display = "block";
+    if (savedName && savedRoom) {
+      joinContainer.style.display = "none";
+      joinRoom(savedName, savedRoom, savedFont, savedColor);
+    }
+
+    // Assign a color for the avatar based on user color
+    function getAvatarColor(color) { return color || '#666'; }
+
+    function joinRoom(nameInput = null, roomInput = null, fontInput = null, colorInput = null) {
+      const name = nameInput || document.getElementById("name").value.trim();
+      const room = roomInput || document.getElementById("room").value.trim();
+      const font = fontInput || document.getElementById("font").value;
+      const color = colorInput || document.getElementById("color").value;
+
+      if (!name || !room) return alert("Enter both name and room");
+
+      localStorage.setItem("displayName", name);
+      localStorage.setItem("lastRoom", room);
+      localStorage.setItem("font", font);
+      localStorage.setItem("color", color);
+
+      currentRoom = room;
+
+      socket.emit("join-room", { name, room, font, color });
+
+      document.getElementById("current-room").textContent = `Room: ${room}`;
+      messagesList.innerHTML = "";
+      document.getElementById("users").innerHTML = "";
+
+      joinContainer.style.display = "none";
+      chatContainer.style.display = "flex";
+    }
+
+    function leaveRoom() {
+      if (!currentRoom) return;
+      socket.emit("leave-room");
+      currentRoom = null;
+      typingUsers.clear();
+      typingIndicator.textContent = "";
+      messagesList.innerHTML = "";
+      document.getElementById("users").innerHTML = "";
+      localStorage.removeItem("lastRoom");
+      chatContainer.style.display = "none";
+      joinContainer.style.display = "block";
+    }
+
+    function sendMessage() {
+      const msg = messageInput.value.trim();
+      if (!msg) return;
+
+      const font = localStorage.getItem("font") || "Arial";
+      const color = localStorage.getItem("color") || "#000000";
+
+      socket.emit("chat-message", { text: msg, font, color });
+      messageInput.value = "";
+      socket.emit("stop-typing");
+    }
+
+    // Send message on Enter
+    messageInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    messageInput.addEventListener("input", () => {
+      socket.emit("typing");
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => { socket.emit("stop-typing"); }, 1000);
+    });
+
+    function createMessageElement(data, isSystem=false, isMyMessage=false) {
+      const li = document.createElement("li");
+      if (isSystem) {
+        li.classList.add("system");
+        li.textContent = `[${data.time}] ${data.text}`;
+      } else {
+        li.classList.add("message");
+        li.classList.add(isMyMessage ? "my-message" : "other-message");
+        li.style.fontFamily = data.font || "Arial";
+        li.style.color = data.color || "#000000";
+
+        const avatar = document.createElement("span");
+        avatar.classList.add("avatar");
+        avatar.style.backgroundColor = getAvatarColor(data.color);
+
+        const textDiv = document.createElement("div");
+        textDiv.classList.add("message-text");
+        textDiv.innerHTML = `<span class="content"><strong>${data.name}</strong>: ${data.text}</span><span class="timestamp">${data.time}</span>`;
+
+        li.appendChild(isMyMessage ? textDiv : avatar);
+        li.appendChild(textDiv);
+      }
+      messagesList.appendChild(li);
+      li.scrollIntoView({ behavior: "smooth" });
+    }
+
+    socket.on("chat-message", (data) => {
+      const isMy = data.name === localStorage.getItem("displayName");
+      createMessageElement(data, false, isMy);
+    });
+
+    socket.on("system-message", (data) => {
+      createMessageElement(data, true);
+    });
+
+    socket.on("typing", (name) => {
+      typingUsers.add(name);
+      updateTypingIndicator();
+    });
+
+    socket.on("stop-typing", (name) => {
+      typingUsers.delete(name);
+      updateTypingIndicator();
+    });
+
+    socket.on("user-list", (users) => {
+      const ul = document.getElementById("users");
+      ul.innerHTML = "";
+      users.forEach(name => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        ul.appendChild(li);
+      });
+    });
+
+    function updateTypingIndicator() {
+      const names = Array.from(typingUsers);
+      if (names.length === 0) typingIndicator.textContent = "";
+      else if (names.length === 1) typingIndicator.textContent = `${names[0]} is typing...`;
+      else typingIndicator.textContent = `${names.join(", ")} are typing...`;
+    }
+  </script>
+</body>
+</html>
