@@ -79,13 +79,23 @@ io.on("connection", (socket) => {
     emitRoomList(); // update all clients with new room list
   });
 
-  // Chat message
+  // Chat message w sanitize
+  function escapeServerHTML(str) {
+    if (!str) return "";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   socket.on("chat-message", (data) => {
     if (!socket.room || !socket.name) return;
 
     const message = {
-      name: socket.name,
-      text: data.text || null,
+      name: escapeServerHTML(socket.name),
+      text: escapeServerHTML(data.text || null),
       image: data.image || null,
       audio: data.audio || null,
       font: data.font || socket.font || "Arial",
@@ -96,6 +106,7 @@ io.on("connection", (socket) => {
 
     io.to(socket.room).emit("chat-message", message);
   });
+
 
 
 

@@ -203,6 +203,11 @@
 
       if (!msg && !selectedImageData && !selectedAudioData) return;
 
+      // Save the current style to localStorage
+      localStorage.setItem("font", font);
+      localStorage.setItem("color", color);
+      localStorage.setItem("size", size);
+
       socket.emit("chat-message", {
         text: msg || null,
         image: selectedImageData || null,
@@ -221,6 +226,7 @@
 
       socket.emit("stop-typing");
     }
+
 
 
 
@@ -259,7 +265,7 @@
 
         let contentHTML = '';
         if (data.text) {
-          contentHTML += `<span class="content"><strong>${data.name}</strong>: ${data.text}</span>`;
+          contentHTML += `<span class="content"><strong>${escapeHTML(data.name)}</strong>: ${escapeHTML(data.text)}</span>`;
         }
         if (data.image) {
           contentHTML += `<img src="${data.image}" style="max-width:200px; max-height:200px; border-radius:8px; margin-top:5px;" />`;
@@ -442,6 +448,21 @@
         allRoomsUl.appendChild(li);
       });
     });
+
+
+
+
+    // Sanitize input
+    function escapeHTML(str) {
+      if (!str) return "";
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
 
 
 
