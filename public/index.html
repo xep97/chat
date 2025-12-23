@@ -16,7 +16,14 @@
     <input id="room" placeholder="Room name" /><br><br>
 
     <button onclick="joinRoom()">Join Room</button>
+
+    <div id="recent-rooms-container" style="margin-top:20px;">
+      <h4>Recent Rooms:</h4>
+      <ul id="recent-rooms" style="list-style:none; padding-left:0;"></ul>
+    </div>
+
   </div>
+  
 
   <!-- Chat Page -->
   <div id="chat-container">
@@ -130,18 +137,32 @@
 
     function getAvatarColor(color) { return color || '#666'; }
 
-    function joinRoom(nameInput = null, roomInput = null) {
+    function joinRoom(nameInput = null, roomInput = null, fontInput = null, colorInput = null, sizeInput = null) {
       const name = nameInput || document.getElementById("name").value.trim();
       const room = roomInput || document.getElementById("room").value.trim();
+      const font = fontInput || document.getElementById("font").value;
+      const color = colorInput || document.getElementById("color").value;
+      const size = sizeInput || document.getElementById("size").value || "14px";
 
       if (!name || !room) return alert("Enter both name and room");
 
       localStorage.setItem("displayName", name);
       localStorage.setItem("lastRoom", room);
+      localStorage.setItem("font", font);
+      localStorage.setItem("color", color);
+      localStorage.setItem("size", size);
+
+      // --- Store room in recent rooms list ---
+      let recentRooms = JSON.parse(localStorage.getItem("recentRooms") || "[]");
+      if (!recentRooms.includes(room)) {
+        recentRooms.unshift(room); // Add to start
+        if (recentRooms.length > 5) recentRooms.pop(); // Keep last 5
+        localStorage.setItem("recentRooms", JSON.stringify(recentRooms));
+      }
 
       currentRoom = room;
 
-      socket.emit("join-room", { name, room });
+      socket.emit("join-room", { name, room, font, color, size });
 
       document.getElementById("current-room").textContent = `Room: ${room}`;
       messagesList.innerHTML = "";
@@ -150,6 +171,7 @@
       joinContainer.style.display = "none";
       chatContainer.style.display = "flex";
     }
+
 
     function leaveRoom() {
       if (!currentRoom) return;
@@ -329,6 +351,35 @@
       };
       reader.readAsDataURL(file);
     });
+
+
+
+
+
+    // List recently visited rooms
+    function updateRecentRooms() {
+      const recentRooms = JSON.parse(localStorage.getItem("recentRooms") || "[]");
+      const ul = document.getElementById("recent-rooms");
+      ul.innerHTML = "";
+
+      recentRooms.forEach(room => {
+        const li = document.createElement("li");
+        li.textContent = room;
+        li.style.cursor = "pointer";
+        li.style.color = "blue";
+        li.style.textDecoration = "underline";
+        li.addEventListener("click", () => {
+          const name = document.getElementById("name").value.trim();
+          if (!name) return alert("Enter your display name first");
+          joinRoom(name, room);
+        });
+        ul.appendChild(li);
+      });
+    }
+
+    // Call once on page load
+    updateRecentRooms();
+
 
 
 
