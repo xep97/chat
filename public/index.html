@@ -116,6 +116,10 @@
       <!-- Color picker -->
       <input type="color" id="color" value="#000000"/>
 
+      <!-- Image send -->
+      <input type="file" id="image-input" accept="image/*" style="display:none;" />
+      <button onclick="document.getElementById('image-input').click();">📷</button>
+
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
@@ -234,11 +238,21 @@
 
         const avatar = document.createElement("span");
         avatar.classList.add("avatar");
-        avatar.style.backgroundColor = getAvatarColor(data.color);
+        avatar.style.backgroundColor = data.color || "#666";
 
         const textDiv = document.createElement("div");
         textDiv.classList.add("message-text");
-        textDiv.innerHTML = `<span class="content"><strong>${data.name}</strong>: ${data.text}</span><span class="timestamp">${data.time}</span>`;
+
+        let contentHTML = '';
+        if (data.text) {
+          contentHTML += `<span class="content"><strong>${data.name}</strong>: ${data.text}</span>`;
+        }
+        if (data.image) {
+          contentHTML += `<img src="${data.image}" style="max-width:200px; max-height:200px; border-radius:8px; margin-top:5px;" />`;
+        }
+        contentHTML += `<span class="timestamp">${data.time}</span>`;
+
+        textDiv.innerHTML = contentHTML;
 
         li.appendChild(isMyMessage ? textDiv : avatar);
         li.appendChild(textDiv);
@@ -246,6 +260,7 @@
       messagesList.appendChild(li);
       li.scrollIntoView({ behavior: "smooth" });
     }
+
 
     socket.on("chat-message", (data) => {
       const isMy = data.name === localStorage.getItem("displayName");
@@ -282,6 +297,28 @@
       else if (names.length === 1) typingIndicator.textContent = `${names[0]} is typing...`;
       else typingIndicator.textContent = `${names.join(", ")} are typing...`;
     }
+
+
+    // Listen for image selection
+    document.getElementById("image-input").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const imageData = evt.target.result; // base64 string
+        const font = document.getElementById("font").value;
+        const color = document.getElementById("color").value;
+        const size = document.getElementById("size").value;
+
+        socket.emit("chat-message", { image: imageData, font, color, size });
+      };
+      reader.readAsDataURL(file);
+
+      // Reset input
+      e.target.value = "";
+    });
+
   </script>
 </body>
 </html>

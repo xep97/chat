@@ -72,15 +72,17 @@ socket.on("chat-message", (data) => {
 
   const message = {
     name: socket.name,
-    text: data.text,
+    text: data.text || null,
+    image: data.image || null,
     font: data.font || socket.font || "Arial",
     color: data.color || socket.color || "#000000",
-    size: data.size || socket.size || "14px", // <--- add this line
+    size: data.size || "14px",
     time: getTime()
   };
 
   io.to(socket.room).emit("chat-message", message);
 });
+
 
 
   // Typing indicators
