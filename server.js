@@ -16,6 +16,17 @@ app.get("/", (req, res) => {
 // Rooms data structure: { roomName: { socketId: userName, ... } }
 const rooms = {};
 
+
+// Send the list of rooms with user counts to a client
+function emitRoomList() {
+  const roomList = Object.keys(rooms).map(roomName => ({
+    name: roomName,
+    userCount: Object.keys(rooms[roomName]).length
+  }));
+  io.emit("room-list", roomList);
+}
+
+
 // Helper to get current HH:MM timestamp
 function getTime() {
   const now = new Date();
@@ -45,6 +56,7 @@ io.on("connection", (socket) => {
 
     // Send updated user list
     io.to(room).emit("user-list", Object.values(rooms[room]));
+    emitRoomList(); // update all clients with new room list
   });
 
   // Leave room
@@ -64,6 +76,7 @@ io.on("connection", (socket) => {
 
     socket.leave(room);
     socket.room = null;
+    emitRoomList(); // update all clients with new room list
   });
 
   // Chat message
@@ -114,6 +127,7 @@ io.on("connection", (socket) => {
       io.to(room).emit("user-list", Object.values(rooms[room]));
     }
     console.log("A user disconnected:", socket.id);
+    emitRoomList(); // update all clients with new room list
   });
 });
 

@@ -23,6 +23,12 @@
       <ul id="recent-rooms" style="list-style:none; padding-left:0;"></ul>
     </div>
 
+    <div id="all-rooms-container" style="margin-top:20px;">
+      <h4>Active Rooms:</h4>
+      <ul id="all-rooms" style="list-style:none; padding-left:0;"></ul>
+    </div>
+
+
 
   </div>
   
@@ -408,6 +414,34 @@
 
     // Call once on page load
     updateRecentRooms();
+
+
+    //List all rooms with user in them
+    const allRoomsUl = document.getElementById("all-rooms");
+
+    socket.on("room-list", (rooms) => {
+      allRoomsUl.innerHTML = "";
+      rooms.forEach(room => {
+        const li = document.createElement("li");
+        li.style.display = "flex";
+        li.style.justifyContent = "space-between";
+        li.style.marginBottom = "5px";
+
+        const roomName = document.createElement("span");
+        roomName.textContent = `${room.name} (${room.userCount})`;
+        roomName.style.cursor = "pointer";
+        roomName.style.color = "green";
+        roomName.style.textDecoration = "underline";
+        roomName.addEventListener("click", () => {
+          const name = document.getElementById("name").value.trim();
+          if (!name) return alert("Enter your display name first");
+          joinRoom(name, room.name);
+        });
+
+        li.appendChild(roomName);
+        allRoomsUl.appendChild(li);
+      });
+    });
 
 
 
