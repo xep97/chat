@@ -32,8 +32,9 @@
     #typing-indicator { font-style: italic; color: gray; margin: 5px 10px; }
 
     /* New message input fixed */
-    #new-message { display: flex; gap: 5px; padding: 10px; border-top: 1px solid #ccc; background: #f5f5f5; }
-    #new-message input { flex: 1; padding: 8px; }
+    #new-message { display: flex; gap: 5px; padding: 10px; border-top: 1px solid #ccc; background: #f5f5f5; align-items: center; }
+    #new-message input[type="text"] { flex: 1; padding: 8px; }
+    #new-message select, #new-message input[type="color"] { padding: 5px; height: 34px; }
     #new-message button { padding: 8px 12px; }
 
     /* Scrollbar for messages */
@@ -48,18 +49,6 @@
     <h2>Join a Chat Room</h2>
     <input id="name" placeholder="Display name" /><br><br>
     <input id="room" placeholder="Room name" /><br><br>
-    
-    <label for="font">Font:</label>
-    <select id="font">
-      <option value="Arial">Arial</option>
-      <option value="Courier New">Courier New</option>
-      <option value="Georgia">Georgia</option>
-      <option value="Verdana">Verdana</option>
-      <option value="Tahoma">Tahoma</option>
-    </select><br><br>
-
-    <label for="color">Text Color:</label>
-    <input type="color" id="color" value="#000000"/><br><br>
 
     <button onclick="joinRoom()">Join Room</button>
   </div>
@@ -82,7 +71,19 @@
     <p id="typing-indicator"></p>
 
     <div id="new-message">
-      <input id="message" placeholder="Message" />
+      <input id="message" type="text" placeholder="Message" />
+
+      <!-- Font and color selectors -->
+      <select id="font">
+        <option value="Arial">Arial</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Tahoma">Tahoma</option>
+      </select>
+
+      <input type="color" id="color" value="#000000"/>
+
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
@@ -101,6 +102,7 @@
     let typingTimeout;
     let currentRoom = null;
 
+    // Restore saved display name and room
     const savedName = localStorage.getItem("displayName");
     const savedRoom = localStorage.getItem("lastRoom");
     const savedFont = localStorage.getItem("font") || "Arial";
@@ -113,28 +115,23 @@
     joinContainer.style.display = "block";
     if (savedName && savedRoom) {
       joinContainer.style.display = "none";
-      joinRoom(savedName, savedRoom, savedFont, savedColor);
+      joinRoom(savedName, savedRoom);
     }
 
-    // Assign a color for the avatar based on user color
     function getAvatarColor(color) { return color || '#666'; }
 
-    function joinRoom(nameInput = null, roomInput = null, fontInput = null, colorInput = null) {
+    function joinRoom(nameInput = null, roomInput = null) {
       const name = nameInput || document.getElementById("name").value.trim();
       const room = roomInput || document.getElementById("room").value.trim();
-      const font = fontInput || document.getElementById("font").value;
-      const color = colorInput || document.getElementById("color").value;
 
       if (!name || !room) return alert("Enter both name and room");
 
       localStorage.setItem("displayName", name);
       localStorage.setItem("lastRoom", room);
-      localStorage.setItem("font", font);
-      localStorage.setItem("color", color);
 
       currentRoom = room;
 
-      socket.emit("join-room", { name, room, font, color });
+      socket.emit("join-room", { name, room });
 
       document.getElementById("current-room").textContent = `Room: ${room}`;
       messagesList.innerHTML = "";
@@ -161,12 +158,15 @@
       const msg = messageInput.value.trim();
       if (!msg) return;
 
-      const font = localStorage.getItem("font") || "Arial";
-      const color = localStorage.getItem("color") || "#000000";
+      const font = document.getElementById("font").value;
+      const color = document.getElementById("color").value;
 
       socket.emit("chat-message", { text: msg, font, color });
       messageInput.value = "";
       socket.emit("stop-typing");
+
+      localStorage.setItem("font", font);
+      localStorage.setItem("color", color);
     }
 
     // Send message on Enter
