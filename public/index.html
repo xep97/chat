@@ -19,8 +19,10 @@
 
     <div id="recent-rooms-container" style="margin-top:20px;">
       <h4>Recent Rooms:</h4>
+      <button id="clear-rooms-btn" style="margin-bottom:5px;">Clear All</button>
       <ul id="recent-rooms" style="list-style:none; padding-left:0;"></ul>
     </div>
+
 
   </div>
   
@@ -184,6 +186,7 @@
       localStorage.removeItem("lastRoom");
       chatContainer.style.display = "none";
       joinContainer.style.display = "block";
+      updateRecentRooms();
     }
 
     function sendMessage() {
@@ -362,20 +365,46 @@
       const ul = document.getElementById("recent-rooms");
       ul.innerHTML = "";
 
-      recentRooms.forEach(room => {
+      recentRooms.forEach((room, index) => {
         const li = document.createElement("li");
-        li.textContent = room;
-        li.style.cursor = "pointer";
-        li.style.color = "blue";
-        li.style.textDecoration = "underline";
-        li.addEventListener("click", () => {
+        li.style.display = "flex";
+        li.style.justifyContent = "space-between";
+        li.style.alignItems = "center";
+        li.style.marginBottom = "5px";
+
+        const roomName = document.createElement("span");
+        roomName.textContent = room;
+        roomName.style.cursor = "pointer";
+        roomName.style.color = "blue";
+        roomName.style.textDecoration = "underline";
+        roomName.addEventListener("click", () => {
           const name = document.getElementById("name").value.trim();
           if (!name) return alert("Enter your display name first");
           joinRoom(name, room);
         });
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "❌";
+        removeBtn.style.marginLeft = "10px";
+        removeBtn.addEventListener("click", () => {
+          recentRooms.splice(index, 1);
+          localStorage.setItem("recentRooms", JSON.stringify(recentRooms));
+          updateRecentRooms();
+        });
+
+        li.appendChild(roomName);
+        li.appendChild(removeBtn);
         ul.appendChild(li);
       });
     }
+
+    // Clear all button
+    document.getElementById("clear-rooms-btn").addEventListener("click", () => {
+      localStorage.removeItem("recentRooms");
+      updateRecentRooms();
+    });
+
+
 
     // Call once on page load
     updateRecentRooms();
