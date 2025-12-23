@@ -67,19 +67,21 @@ io.on("connection", (socket) => {
   });
 
   // Chat message
-  socket.on("chat-message", (data) => {
-    if (!socket.room || !socket.name) return;
+socket.on("chat-message", (data) => {
+  if (!socket.room || !socket.name) return;
 
-    const message = {
-      name: socket.name,
-      text: data.text,
-      font: data.font || socket.font || "Arial",
-      color: data.color || socket.color || "#000000",
-      time: getTime()
-    };
+  const message = {
+    name: socket.name,
+    text: data.text,
+    font: data.font || socket.font || "Arial",
+    color: data.color || socket.color || "#000000",
+    size: data.size || socket.size || "14px", // <--- add this line
+    time: getTime()
+  };
 
-    io.to(socket.room).emit("chat-message", message);
-  });
+  io.to(socket.room).emit("chat-message", message);
+});
+
 
   // Typing indicators
   socket.on("typing", () => {

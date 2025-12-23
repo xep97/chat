@@ -31,9 +31,9 @@
 
     #typing-indicator { font-style: italic; color: gray; margin: 5px 10px; }
 
-    /* New message input fixed */
-    #new-message { display: flex; gap: 5px; padding: 10px; border-top: 1px solid #ccc; background: #f5f5f5; align-items: center; }
-    #new-message input[type="text"] { flex: 1; padding: 8px; }
+    /* New message input */
+    #new-message { display: flex; gap: 5px; padding: 10px; border-top: 1px solid #ccc; background: #f5f5f5; align-items: center; flex-wrap: wrap; }
+    #new-message input[type="text"] { flex: 1; padding: 8px; min-width: 150px; }
     #new-message select, #new-message input[type="color"] { padding: 5px; height: 34px; }
     #new-message button { padding: 8px 12px; }
 
@@ -73,15 +73,31 @@
     <div id="new-message">
       <input id="message" type="text" placeholder="Message" />
 
-      <!-- Font and color selectors -->
+      <!-- Font selector -->
       <select id="font">
         <option value="Arial">Arial</option>
         <option value="Courier New">Courier New</option>
         <option value="Georgia">Georgia</option>
         <option value="Verdana">Verdana</option>
         <option value="Tahoma">Tahoma</option>
+        <option value="Comic Sans MS">Comic Sans MS</option>
+        <option value="Lucida Console">Lucida Console</option>
+        <option value="Trebuchet MS">Trebuchet MS</option>
+        <option value="Impact">Impact</option>
       </select>
 
+      <!-- Text size selector -->
+      <select id="size">
+        <option value="12px">12px</option>
+        <option value="14px" selected>14px</option>
+        <option value="16px">16px</option>
+        <option value="18px">18px</option>
+        <option value="20px">20px</option>
+        <option value="22px">22px</option>
+        <option value="24px">24px</option>
+      </select>
+
+      <!-- Color picker -->
       <input type="color" id="color" value="#000000"/>
 
       <button onclick="sendMessage()">Send</button>
@@ -102,15 +118,17 @@
     let typingTimeout;
     let currentRoom = null;
 
-    // Restore saved display name and room
+    // Restore saved settings
     const savedName = localStorage.getItem("displayName");
     const savedRoom = localStorage.getItem("lastRoom");
     const savedFont = localStorage.getItem("font") || "Arial";
     const savedColor = localStorage.getItem("color") || "#000000";
+    const savedSize = localStorage.getItem("size") || "14px";
 
     if (savedName) document.getElementById("name").value = savedName;
     document.getElementById("font").value = savedFont;
     document.getElementById("color").value = savedColor;
+    document.getElementById("size").value = savedSize;
 
     joinContainer.style.display = "block";
     if (savedName && savedRoom) {
@@ -160,13 +178,16 @@
 
       const font = document.getElementById("font").value;
       const color = document.getElementById("color").value;
+      const size = document.getElementById("size").value;
 
-      socket.emit("chat-message", { text: msg, font, color });
+      socket.emit("chat-message", { text: msg, font, color, size });
       messageInput.value = "";
       socket.emit("stop-typing");
 
+      // Save preferences
       localStorage.setItem("font", font);
       localStorage.setItem("color", color);
+      localStorage.setItem("size", size);
     }
 
     // Send message on Enter
@@ -193,6 +214,7 @@
         li.classList.add(isMyMessage ? "my-message" : "other-message");
         li.style.fontFamily = data.font || "Arial";
         li.style.color = data.color || "#000000";
+        li.style.fontSize = data.size || "14px";
 
         const avatar = document.createElement("span");
         avatar.classList.add("avatar");
