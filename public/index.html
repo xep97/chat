@@ -119,8 +119,10 @@
       <!-- Image send -->
       <input type="file" id="image-input" accept="image/*" style="display:none;" />
       <button onclick="document.getElementById('image-input').click();">📷</button>
-
       <button onclick="sendMessage()">Send</button>
+
+      <!-- Preview container -->
+      <div id="image-preview" style="margin-top:5px;"></div>
     </div>
   </div>
 
@@ -194,21 +196,28 @@
 
     function sendMessage() {
       const msg = messageInput.value.trim();
-      if (!msg) return;
-
       const font = document.getElementById("font").value;
       const color = document.getElementById("color").value;
       const size = document.getElementById("size").value;
 
-      socket.emit("chat-message", { text: msg, font, color, size });
-      messageInput.value = "";
-      socket.emit("stop-typing");
+      if (!msg && !selectedImageData) return;
 
-      // Save preferences
-      localStorage.setItem("font", font);
-      localStorage.setItem("color", color);
-      localStorage.setItem("size", size);
+      socket.emit("chat-message", {
+        text: msg || null,
+        image: selectedImageData || null,
+        font,
+        color,
+        size
+      });
+
+      // Clear input and preview
+      messageInput.value = "";
+      selectedImageData = null;
+      imagePreview.innerHTML = "";
+
+      socket.emit("stop-typing");
     }
+
 
     // Send message on Enter
     messageInput.addEventListener("keydown", (e) => {
@@ -300,24 +309,25 @@
 
 
     // Listen for image selection
-    document.getElementById("image-input").addEventListener("change", function(e) {
+    let selectedImageData = null;
+
+    const imageInput = document.getElementById("image-input");
+    const imagePreview = document.getElementById("image-preview");
+
+    imageInput.addEventListener("change", function(e) {
       const file = e.target.files[0];
       if (!file) return;
 
       const reader = new FileReader();
       reader.onload = function(evt) {
-        const imageData = evt.target.result; // base64 string
-        const font = document.getElementById("font").value;
-        const color = document.getElementById("color").value;
-        const size = document.getElementById("size").value;
+        selectedImageData = evt.target.result;
 
-        socket.emit("chat-message", { image: imageData, font, color, size });
+        // Show preview
+        imagePreview.innerHTML = `<img src="${selectedImageData}" style="max-width:100px; max-height:100px; border-radius:5px;" />`;
       };
       reader.readAsDataURL(file);
-
-      // Reset input
-      e.target.value = "";
     });
+
 
   </script>
 </body>
