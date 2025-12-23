@@ -455,13 +455,16 @@
     // Sanitize input
     function escapeHTML(str) {
       if (!str) return "";
+
+      // Replace only dangerous characters that start HTML tags or attributes
       return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
+        // Escape quotes to prevent breaking attributes
         .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+        .replace(/'/g, "&#39;")
+        // Optionally, escape backticks to prevent template injection
+        .replace(/`/g, "&#96;");
     }
+
 
 
 
