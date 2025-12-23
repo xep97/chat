@@ -67,21 +67,23 @@ io.on("connection", (socket) => {
   });
 
   // Chat message
-socket.on("chat-message", (data) => {
-  if (!socket.room || !socket.name) return;
+  socket.on("chat-message", (data) => {
+    if (!socket.room || !socket.name) return;
 
-  const message = {
-    name: socket.name,
-    text: data.text || null,
-    image: data.image || null,
-    font: data.font || socket.font || "Arial",
-    color: data.color || socket.color || "#000000",
-    size: data.size || "14px",
-    time: getTime()
-  };
+    const message = {
+      name: socket.name,
+      text: data.text || null,
+      image: data.image || null,
+      audio: data.audio || null,
+      font: data.font || socket.font || "Arial",
+      color: data.color || socket.color || "#000000",
+      size: data.size || "14px",
+      time: getTime()
+    };
 
-  io.to(socket.room).emit("chat-message", message);
-});
+    io.to(socket.room).emit("chat-message", message);
+  });
+
 
 
 
