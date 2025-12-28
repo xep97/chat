@@ -253,8 +253,15 @@
         li.classList.add("message");
         li.classList.add(isMyMessage ? "my-message" : "other-message");
         li.style.fontFamily = data.font || "Arial";
-        li.style.color = data.color || "#000000";
         li.style.fontSize = data.size || "14px";
+
+        /* Bubble background color */
+        const bgColor = data.color || "#e5e5e5";
+        li.style.backgroundColor = bgColor;
+
+        /* Auto text contrast */
+        li.style.color = getContrastColor(bgColor);
+
 
         const avatar = document.createElement("span");
         avatar.classList.add("avatar");
@@ -265,7 +272,12 @@
 
         let contentHTML = '';
         if (data.text) {
-          contentHTML += `<span class="content"><strong>${escapeHTML(data.name)}</strong>: ${escapeHTML(data.text)}</span>`;
+          contentHTML += `
+          <span class="content">
+            <strong class="username">${escapeHTML(data.name)}</strong>: ${escapeHTML(data.text)}
+          </span>
+        `;
+
         }
         if (data.image) {
           contentHTML += `<img src="${data.image}" style="max-width:200px; max-height:200px; border-radius:8px; margin-top:5px;" />`;
@@ -285,6 +297,18 @@
       messagesList.appendChild(li);
       li.scrollIntoView({ behavior: "smooth" });
     }
+
+    function getContrastColor(hex) {
+      hex = hex.replace("#", "");
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+
+      // Perceived brightness formula
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 125 ? "#000000" : "#ffffff";
+    }
+
 
 
 
