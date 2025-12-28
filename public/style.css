@@ -25,7 +25,7 @@ body {
   align-items: center;
   padding: 10px;
   border-bottom: 1px solid #ccc;
-  background: #f5f5f5;
+  background: indigo;
   position: fixed;
   top: 0;
   left: 0;
@@ -53,7 +53,7 @@ body {
   border-left: 1px solid #ccc;
   padding: 10px;
   overflow-y: auto;
-  background: #fafafa;
+  background: indigo;
 }
 
 #user-list h4 {
@@ -130,7 +130,7 @@ body {
   gap: 5px;
   padding: 10px;
   border-top: 1px solid #ccc;
-  background: #f5f5f5;
+  background: indigo;
   align-items: center;
   flex-wrap: wrap;
   position: fixed;
