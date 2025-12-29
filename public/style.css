@@ -16,6 +16,10 @@ body {
   display: none;
   flex: 1;
   flex-direction: column;
+  background-attachment: fixed;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 /* Chat header */
@@ -25,7 +29,7 @@ body {
   align-items: center;
   padding: 10px;
   border-bottom: 1px solid #ccc;
-  background: indigo;
+  background: rgba(0, 20, 50, 0.8);
   position: fixed;
   top: 0;
   left: 0;
@@ -53,7 +57,7 @@ body {
   border-left: 1px solid #ccc;
   padding: 10px;
   overflow-y: auto;
-  background: indigo;
+  background: rgba(0, 20, 50, 0.8);
 }
 
 #user-list h4 {
@@ -130,7 +134,7 @@ body {
   gap: 5px;
   padding: 10px;
   border-top: 1px solid #ccc;
-  background: indigo;
+  background: rgba(0, 20, 50, 0.8);
   align-items: center;
   flex-wrap: wrap;
   position: fixed;

@@ -1,8 +1,11 @@
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
-const io = require("socket.io")(http);
+const io = require("socket.io")(http, {
+  maxHttpBufferSize: 5 * 1024 * 1024 // 5 MB per message
+});
 const path = require("path");
+
 
 const PORT = process.env.PORT || 3000;
 
@@ -27,6 +30,14 @@ function emitRoomList() {
 }
 
 
+
+  // Store room backgrounds
+  const roomBackgrounds = {};
+  
+
+
+
+
 // Helper to get current HH:MM timestamp
 function getTime() {
   const now = new Date();
@@ -48,10 +59,26 @@ io.on("connection", (socket) => {
 
     socket.join(room);
 
+    // Send room background to new user
+    if (roomBackgrounds[room]) {
+      socket.emit("room-background", roomBackgrounds[room]);
+    }
+
+
     // Notify others in room
     io.to(room).emit("system-message", {
       text: `${name} joined the room`,
       time: getTime()
+    });
+
+    //Background image
+    socket.on("set-room-background", (data) => {
+    if (!socket.room) return;
+      // data.background can be an image URL or base64 image
+      roomBackgrounds[socket.room] = data.background;
+
+      // Send to everyone in the room
+      io.to(socket.room).emit("room-background", data.background);
     });
 
     // Send updated user list

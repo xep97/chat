@@ -38,6 +38,8 @@
     <div id="chat-top">
       <h3 id="current-room">Room: </h3>
       <button onclick="leaveRoom()">Leave Room</button>
+      <input type="file" id="bg-input" accept="image/*" style="display:none;" />
+      <button onclick="document.getElementById('bg-input').click();">🖼️ Set Background</button>
     </div>
 
     <div id="chat-area">
@@ -489,6 +491,35 @@
         .replace(/`/g, "&#96;");
     }
 
+
+
+    // Background in chats
+    const bgInput = document.getElementById("bg-input");
+
+    bgInput.addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        const backgroundData = evt.target.result;
+
+        socket.emit("set-room-background", {
+          background: backgroundData
+        });
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    
+    socket.on("room-background", (background) => {
+    const chatArea = document.getElementById("chat-container");
+
+    chatArea.style.backgroundImage = `url(${background})`;
+    chatArea.style.backgroundSize = "cover";
+    chatArea.style.backgroundPosition = "center";
+  });
 
 
 
