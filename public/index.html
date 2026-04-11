@@ -2,44 +2,10 @@
 <html>
 <head>
   <title>Chat App</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; }
-    #join-container { display: none; padding: 20px; }
-    #chat-container { display: none; flex: 1; flex-direction: column; }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
 
-    /* Chat header */
-    #chat-top { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ccc; background: #f5f5f5; }
-
-    /* Chat area */
-    #chat-area { display: flex; flex: 1; overflow: hidden; }
-    #messages { list-style: none; padding: 10px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-    #user-list { width: 200px; border-left: 1px solid #ccc; padding: 10px; overflow-y: auto; background: #fafafa; }
-
-    #user-list h4 { margin-top: 0; }
-
-    /* Message bubbles */
-    .message { padding: 8px 12px; margin: 5px 0; border-radius: 12px; max-width: 70%; word-wrap: break-word; display: flex; align-items: center; }
-    .my-message { background-color: #d1ffd6; align-self: flex-end; justify-content: flex-end; }
-    .other-message { background-color: #f1f0f0; align-self: flex-start; justify-content: flex-start; }
-    .avatar { width: 20px; height: 20px; border-radius: 50%; display: inline-block; margin-right: 8px; flex-shrink: 0; }
-    .message-text { display: flex; flex-direction: column; }
-    .message-text .content { }
-    .message-text .timestamp { font-size: 0.7em; color: gray; margin-top: 2px; align-self: flex-end; }
-
-    /* System message */
-    .system { text-align: center; font-style: italic; color: gray; margin: 5px 0; }
-
-    #typing-indicator { font-style: italic; color: gray; margin: 5px 10px; }
-
-    /* New message input fixed */
-    #new-message { display: flex; gap: 5px; padding: 10px; border-top: 1px solid #ccc; background: #f5f5f5; }
-    #new-message input { flex: 1; padding: 8px; }
-    #new-message button { padding: 8px 12px; }
-
-    /* Scrollbar for messages */
-    #messages::-webkit-scrollbar { width: 8px; }
-    #messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
-  </style>
 </head>
 <body>
 
@@ -48,27 +14,32 @@
     <h2>Join a Chat Room</h2>
     <input id="name" placeholder="Display name" /><br><br>
     <input id="room" placeholder="Room name" /><br><br>
-    
-    <label for="font">Font:</label>
-    <select id="font">
-      <option value="Arial">Arial</option>
-      <option value="Courier New">Courier New</option>
-      <option value="Georgia">Georgia</option>
-      <option value="Verdana">Verdana</option>
-      <option value="Tahoma">Tahoma</option>
-    </select><br><br>
-
-    <label for="color">Text Color:</label>
-    <input type="color" id="color" value="#000000"/><br><br>
 
     <button onclick="joinRoom()">Join Room</button>
+
+    <div id="recent-rooms-container" style="margin-top:20px;">
+      <h4>Recent Rooms:</h4>
+      <button id="clear-rooms-btn" style="margin-bottom:5px;">Clear All</button>
+      <ul id="recent-rooms" style="list-style:none; padding-left:0;"></ul>
+    </div>
+
+    <div id="all-rooms-container" style="margin-top:20px;">
+      <h4>Active Rooms:</h4>
+      <ul id="all-rooms" style="list-style:none; padding-left:0;"></ul>
+    </div>
+
+
+
   </div>
+  
 
   <!-- Chat Page -->
   <div id="chat-container">
     <div id="chat-top">
       <h3 id="current-room">Room: </h3>
       <button onclick="leaveRoom()">Leave Room</button>
+      <input type="file" id="bg-input" accept="image/*" style="display:none;" />
+      <button onclick="document.getElementById('bg-input').click();">🖼️ Set Background</button>
     </div>
 
     <div id="chat-area">
@@ -82,8 +53,63 @@
     <p id="typing-indicator"></p>
 
     <div id="new-message">
-      <input id="message" placeholder="Message" />
+      <input id="message" type="text" placeholder="Message" />
+
+      <!-- Font selector -->
+      <select id="font">
+        <option value="Arial">Arial</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Tahoma">Tahoma</option>
+        <option value="Comic Sans MS">Comic Sans MS</option>
+        <option value="Lucida Console">Lucida Console</option>
+        <option value="Trebuchet MS">Trebuchet MS</option>
+        <option value="Impact">Impact</option>
+      </select>
+
+      <!-- Text size selector -->
+      <select id="size">
+        <option value="8px">8px</option>
+        <option value="10px">10px</option>
+        <option value="12px">12px</option>
+        <option value="14px" selected>14px</option>
+        <option value="16px">16px</option>
+        <option value="18px">18px</option>
+
+        <option value="22px">22px</option>
+        <option value="26px">26px</option>
+        <option value="30px">30px</option>
+        <option value="34px">34px</option>
+        <option value="38px">38px</option>
+        <option value="42px">42px</option>
+
+        <option value="48px">48px</option>
+        <option value="54px">54px</option>
+        <option value="60px">60px</option>
+        <option value="66px">66px</option>
+        <option value="72px">72px</option>
+        <option value="78px">78px</option>
+        <option value="84px">84px</option>
+        <option value="90px">90px</option>
+      </select>
+
+
+      <!-- Color picker -->
+      <input type="color" id="color" value="#000000"/>
+
+      <!-- Image send -->
+      <input type="file" id="image-input" accept="image/*" style="display:none;" />
+      <button onclick="document.getElementById('image-input').click();">📷</button>
+
+      <input type="file" id="audio-input" accept="audio/*" style="display:none;" />
+      <button onclick="document.getElementById('audio-input').click();">🎵</button>
+
       <button onclick="sendMessage()">Send</button>
+
+      <!-- Previews -->
+      <div id="image-preview" style="margin-top:5px;"></div>
+      <div id="audio-preview" style="margin-top:5px;"></div>
     </div>
   </div>
 
@@ -101,29 +127,32 @@
     let typingTimeout;
     let currentRoom = null;
 
+    // Restore saved settings
     const savedName = localStorage.getItem("displayName");
     const savedRoom = localStorage.getItem("lastRoom");
     const savedFont = localStorage.getItem("font") || "Arial";
     const savedColor = localStorage.getItem("color") || "#000000";
+    const savedSize = localStorage.getItem("size") || "14px";
 
     if (savedName) document.getElementById("name").value = savedName;
     document.getElementById("font").value = savedFont;
     document.getElementById("color").value = savedColor;
+    document.getElementById("size").value = savedSize;
 
     joinContainer.style.display = "block";
     if (savedName && savedRoom) {
       joinContainer.style.display = "none";
-      joinRoom(savedName, savedRoom, savedFont, savedColor);
+      joinRoom(savedName, savedRoom);
     }
 
-    // Assign a color for the avatar based on user color
     function getAvatarColor(color) { return color || '#666'; }
 
-    function joinRoom(nameInput = null, roomInput = null, fontInput = null, colorInput = null) {
+    function joinRoom(nameInput = null, roomInput = null, fontInput = null, colorInput = null, sizeInput = null) {
       const name = nameInput || document.getElementById("name").value.trim();
       const room = roomInput || document.getElementById("room").value.trim();
       const font = fontInput || document.getElementById("font").value;
       const color = colorInput || document.getElementById("color").value;
+      const size = sizeInput || document.getElementById("size").value || "14px";
 
       if (!name || !room) return alert("Enter both name and room");
 
@@ -131,10 +160,19 @@
       localStorage.setItem("lastRoom", room);
       localStorage.setItem("font", font);
       localStorage.setItem("color", color);
+      localStorage.setItem("size", size);
+
+      // --- Store room in recent rooms list ---
+      let recentRooms = JSON.parse(localStorage.getItem("recentRooms") || "[]");
+      if (!recentRooms.includes(room)) {
+        recentRooms.unshift(room); // Add to start
+        if (recentRooms.length > 5) recentRooms.pop(); // Keep last 5
+        localStorage.setItem("recentRooms", JSON.stringify(recentRooms));
+      }
 
       currentRoom = room;
 
-      socket.emit("join-room", { name, room, font, color });
+      socket.emit("join-room", { name, room, font, color, size });
 
       document.getElementById("current-room").textContent = `Room: ${room}`;
       messagesList.innerHTML = "";
@@ -143,6 +181,7 @@
       joinContainer.style.display = "none";
       chatContainer.style.display = "flex";
     }
+
 
     function leaveRoom() {
       if (!currentRoom) return;
@@ -155,19 +194,43 @@
       localStorage.removeItem("lastRoom");
       chatContainer.style.display = "none";
       joinContainer.style.display = "block";
+      updateRecentRooms();
     }
 
     function sendMessage() {
       const msg = messageInput.value.trim();
-      if (!msg) return;
+      const font = document.getElementById("font").value;
+      const color = document.getElementById("color").value;
+      const size = document.getElementById("size").value;
 
-      const font = localStorage.getItem("font") || "Arial";
-      const color = localStorage.getItem("color") || "#000000";
+      if (!msg && !selectedImageData && !selectedAudioData) return;
 
-      socket.emit("chat-message", { text: msg, font, color });
+      // Save the current style to localStorage
+      localStorage.setItem("font", font);
+      localStorage.setItem("color", color);
+      localStorage.setItem("size", size);
+
+      socket.emit("chat-message", {
+        text: msg || null,
+        image: selectedImageData || null,
+        audio: selectedAudioData || null,
+        font,
+        color,
+        size
+      });
+
+      // Clear inputs and previews
       messageInput.value = "";
+      selectedImageData = null;
+      selectedAudioData = null;
+      imagePreview.innerHTML = "";
+      audioPreview.innerHTML = "";
+
       socket.emit("stop-typing");
     }
+
+
+
 
     // Send message on Enter
     messageInput.addEventListener("keydown", (e) => {
@@ -192,15 +255,43 @@
         li.classList.add("message");
         li.classList.add(isMyMessage ? "my-message" : "other-message");
         li.style.fontFamily = data.font || "Arial";
-        li.style.color = data.color || "#000000";
+        li.style.fontSize = data.size || "14px";
+
+        /* Bubble background color */
+        const bgColor = data.color || "#e5e5e5";
+        li.style.backgroundColor = bgColor;
+
+        /* Auto text contrast */
+        li.style.color = getContrastColor(bgColor);
+
 
         const avatar = document.createElement("span");
         avatar.classList.add("avatar");
-        avatar.style.backgroundColor = getAvatarColor(data.color);
+        avatar.style.backgroundColor = data.color || "#666";
 
         const textDiv = document.createElement("div");
         textDiv.classList.add("message-text");
-        textDiv.innerHTML = `<span class="content"><strong>${data.name}</strong>: ${data.text}</span><span class="timestamp">${data.time}</span>`;
+
+        let contentHTML = '';
+        if (data.text) {
+          contentHTML += `
+          <span class="content">
+            <strong class="username">${escapeHTML(data.name)}</strong>: ${escapeHTML(data.text)}
+          </span>
+        `;
+
+        }
+        if (data.image) {
+          contentHTML += `<img src="${data.image}" style="max-width:200px; max-height:200px; border-radius:8px; margin-top:5px;" />`;
+        }
+        if (data.audio) {
+          contentHTML += `<audio controls style="max-width:200px; margin-top:5px;">
+                            <source src="${data.audio}" type="audio/mpeg">
+                          </audio>`;
+        }
+        contentHTML += `<span class="timestamp">${data.time}</span>`;
+
+        textDiv.innerHTML = contentHTML;
 
         li.appendChild(isMyMessage ? textDiv : avatar);
         li.appendChild(textDiv);
@@ -208,6 +299,20 @@
       messagesList.appendChild(li);
       li.scrollIntoView({ behavior: "smooth" });
     }
+
+    function getContrastColor(hex) {
+      hex = hex.replace("#", "");
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+
+      // Perceived brightness formula
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 125 ? "#000000" : "#ffffff";
+    }
+
+
+
 
     socket.on("chat-message", (data) => {
       const isMy = data.name === localStorage.getItem("displayName");
@@ -244,6 +349,182 @@
       else if (names.length === 1) typingIndicator.textContent = `${names[0]} is typing...`;
       else typingIndicator.textContent = `${names.join(", ")} are typing...`;
     }
+
+
+    // Listen for image selection
+    let selectedImageData = null;
+
+    const imageInput = document.getElementById("image-input");
+    const imagePreview = document.getElementById("image-preview");
+
+    imageInput.addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        selectedImageData = evt.target.result;
+
+        // Show preview
+        imagePreview.innerHTML = `<img src="${selectedImageData}" style="max-width:100px; max-height:100px; border-radius:5px;" />`;
+      };
+      reader.readAsDataURL(file);
+    });
+
+
+    let selectedAudioData = null;
+
+    const audioInput = document.getElementById("audio-input");
+    const audioPreview = document.getElementById("audio-preview");
+
+    audioInput.addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        selectedAudioData = evt.target.result;
+
+        // Show preview
+        audioPreview.innerHTML = `<audio controls style="max-width:200px;">
+                                    <source src="${selectedAudioData}" type="${file.type}">
+                                  </audio>`;
+      };
+      reader.readAsDataURL(file);
+    });
+
+
+
+
+
+    // List recently visited rooms
+    function updateRecentRooms() {
+      const recentRooms = JSON.parse(localStorage.getItem("recentRooms") || "[]");
+      const ul = document.getElementById("recent-rooms");
+      ul.innerHTML = "";
+
+      recentRooms.forEach((room, index) => {
+        const li = document.createElement("li");
+        li.style.display = "flex";
+        li.style.justifyContent = "space-between";
+        li.style.alignItems = "center";
+        li.style.marginBottom = "5px";
+
+        const roomName = document.createElement("span");
+        roomName.textContent = room;
+        roomName.style.cursor = "pointer";
+        roomName.style.color = "blue";
+        roomName.style.textDecoration = "underline";
+        roomName.addEventListener("click", () => {
+          const name = document.getElementById("name").value.trim();
+          if (!name) return alert("Enter your display name first");
+          joinRoom(name, room);
+        });
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "❌";
+        removeBtn.style.marginLeft = "10px";
+        removeBtn.addEventListener("click", () => {
+          recentRooms.splice(index, 1);
+          localStorage.setItem("recentRooms", JSON.stringify(recentRooms));
+          updateRecentRooms();
+        });
+
+        li.appendChild(roomName);
+        li.appendChild(removeBtn);
+        ul.appendChild(li);
+      });
+    }
+
+    // Clear all button
+    document.getElementById("clear-rooms-btn").addEventListener("click", () => {
+      localStorage.removeItem("recentRooms");
+      updateRecentRooms();
+    });
+
+
+
+    // Call once on page load
+    updateRecentRooms();
+
+
+    //List all rooms with user in them
+    const allRoomsUl = document.getElementById("all-rooms");
+
+    socket.on("room-list", (rooms) => {
+      allRoomsUl.innerHTML = "";
+      rooms.forEach(room => {
+        const li = document.createElement("li");
+        li.style.display = "flex";
+        li.style.justifyContent = "space-between";
+        li.style.marginBottom = "5px";
+
+        const roomName = document.createElement("span");
+        roomName.textContent = `${room.name} (${room.userCount})`;
+        roomName.style.cursor = "pointer";
+        roomName.style.color = "green";
+        roomName.style.textDecoration = "underline";
+        roomName.addEventListener("click", () => {
+          const name = document.getElementById("name").value.trim();
+          if (!name) return alert("Enter your display name first");
+          joinRoom(name, room.name);
+        });
+
+        li.appendChild(roomName);
+        allRoomsUl.appendChild(li);
+      });
+    });
+
+
+
+
+    // Sanitize input
+    function escapeHTML(str) {
+      if (!str) return "";
+
+      // Replace only dangerous characters that start HTML tags or attributes
+      return str
+        // Escape quotes to prevent breaking attributes
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;")
+        // Optionally, escape backticks to prevent template injection
+        .replace(/`/g, "&#96;");
+    }
+
+
+
+    // Background in chats
+    const bgInput = document.getElementById("bg-input");
+
+    bgInput.addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        const backgroundData = evt.target.result;
+
+        socket.emit("set-room-background", {
+          background: backgroundData
+        });
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    
+    socket.on("room-background", (background) => {
+    const chatArea = document.getElementById("chat-container");
+
+    chatArea.style.backgroundImage = `url(${background})`;
+    chatArea.style.backgroundSize = "cover";
+    chatArea.style.backgroundPosition = "center";
+  });
+
+
+
+
+
   </script>
 </body>
 </html>

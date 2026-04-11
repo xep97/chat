@@ -1,8 +1,11 @@
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
-const io = require("socket.io")(http);
+const io = require("socket.io")(http, {
+  maxHttpBufferSize: 5 * 1024 * 1024 // 5 MB per message
+});
 const path = require("path");
+
 
 const PORT = process.env.PORT || 3000;
 
@@ -15,6 +18,25 @@ app.get("/", (req, res) => {
 
 // Rooms data structure: { roomName: { socketId: userName, ... } }
 const rooms = {};
+
+
+// Send the list of rooms with user counts to a client
+function emitRoomList() {
+  const roomList = Object.keys(rooms).map(roomName => ({
+    name: roomName,
+    userCount: Object.keys(rooms[roomName]).length
+  }));
+  io.emit("room-list", roomList);
+}
+
+
+
+  // Store room backgrounds
+  const roomBackgrounds = {};
+  
+
+
+
 
 // Helper to get current HH:MM timestamp
 function getTime() {
@@ -37,14 +59,31 @@ io.on("connection", (socket) => {
 
     socket.join(room);
 
+    // Send room background to new user
+    if (roomBackgrounds[room]) {
+      socket.emit("room-background", roomBackgrounds[room]);
+    }
+
+
     // Notify others in room
     io.to(room).emit("system-message", {
       text: `${name} joined the room`,
       time: getTime()
     });
 
+    //Background image
+    socket.on("set-room-background", (data) => {
+    if (!socket.room) return;
+      // data.background can be an image URL or base64 image
+      roomBackgrounds[socket.room] = data.background;
+
+      // Send to everyone in the room
+      io.to(socket.room).emit("room-background", data.background);
+    });
+
     // Send updated user list
     io.to(room).emit("user-list", Object.values(rooms[room]));
+    emitRoomList(); // update all clients with new room list
   });
 
   // Leave room
@@ -64,22 +103,40 @@ io.on("connection", (socket) => {
 
     socket.leave(room);
     socket.room = null;
+    emitRoomList(); // update all clients with new room list
   });
 
-  // Chat message
+  // Chat message w sanitize
+  function escapeServerHTML(str) {
+    if (!str) return "";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   socket.on("chat-message", (data) => {
     if (!socket.room || !socket.name) return;
 
     const message = {
-      name: socket.name,
-      text: data.text,
+      name: escapeServerHTML(socket.name),
+      text: escapeServerHTML(data.text || null),
+      image: data.image || null,
+      audio: data.audio || null,
       font: data.font || socket.font || "Arial",
       color: data.color || socket.color || "#000000",
+      size: data.size || "14px",
       time: getTime()
     };
 
     io.to(socket.room).emit("chat-message", message);
   });
+
+
+
+
 
   // Typing indicators
   socket.on("typing", () => {
@@ -108,6 +165,7 @@ io.on("connection", (socket) => {
       io.to(room).emit("user-list", Object.values(rooms[room]));
     }
     console.log("A user disconnected:", socket.id);
+    emitRoomList(); // update all clients with new room list
   });
 });
 
